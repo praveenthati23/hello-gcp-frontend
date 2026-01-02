@@ -1,34 +1,43 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { fetchUsers } from '../api/backend';
-import Users from '../components/Users';
+import CreateUser from '../components/CreateUser';
 
-function Home() {
+export default function Home() {
   const [users, setUsers] = useState([]);
-  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(true);
 
-  const loadUsers = async () => {
+  async function loadUsers() {
+    setLoading(true);
     try {
-      setError('');
       const data = await fetchUsers();
       setUsers(data);
-    } catch (err) {
-      setError('Unable to load users');
+    } finally {
+      setLoading(false);
     }
-  };
+  }
+
+  useEffect(() => {
+    loadUsers();
+  }, []);
 
   return (
     <div>
       <h1>Hello GCP</h1>
 
-      <button onClick={loadUsers}>
-        Fetch Users
-      </button>
+      <CreateUser onUserCreated={loadUsers} />
 
-      {error && <p className="error">{error}</p>}
-      <Users users={users} />
+      {loading && <p>Loading users...</p>}
+
+      {!loading && users.length === 0 && <p>No users found</p>}
+
+      <ul>
+        {users.map((u) => (
+          <li key={u.id}>
+            {u.name} ({u.email})
+          </li>
+        ))}
+      </ul>
     </div>
   );
 }
-
-export default Home;
 
